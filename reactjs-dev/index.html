@@ -1,0 +1,86 @@
+<html>
+    <head>
+        <title>Reactjs Dev</title>
+        <meta name="description" content="">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" />
+        <!-- Title is needed to trigger loading entonejs -->
+    </head>
+    <body>
+    </body>
+    <!-- The core React library -->
+    <script src="http://fb.me/react-0.12.2.js"></script>
+    <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
+    <script src="http://fb.me/JSXTransformer-0.12.2.js"></script>
+    <script type="text/jsx">
+        var MyAppComponent = React.createClass({
+            render: function() {
+                return (
+                    <div className="container">
+                        <div className="page-header">
+                            <h1>Reactjs Demo Page:</h1>
+                            <h2 id="helloMsg">
+                                <HelloMessage name={this.props.helloMsg}/>
+                            </h2>
+                        </div>
+                        <MyListComponent results={this.props.listItems}/>
+                    </div>
+                );
+            }
+        });
+
+        var HelloMessage = React.createClass({
+            render: function() {
+                return <small>Hello {this.props.name}!</small>;
+            }
+        });
+
+	var ListItemWrapper = React.createClass({
+            render: function() {
+                return <li className={this.props.active ? "list-group-item active" : "list-group-item"}>{this.props.data.text}</li>;
+            }
+        });
+        var MyListComponent = React.createClass({
+            getInitialState: function() {
+                return {
+                    activeIdx: 0
+                }
+            },
+            render: function() {
+                var activeIdx = this.state.activeIdx;
+                return (
+	            <ul className="list-group">
+	                {this.props.results.map(function(result, idx) {
+		            return <ListItemWrapper key={result.id} data={result} active={idx === activeIdx}/>;
+		        })}
+	            </ul>
+                );
+            }
+        });
+
+        var myList = [{
+            "id": 1,
+            "text": "Cras justo odio"
+        },{
+            "id": 2,
+            "text": "Dapibus ac facilisis in"
+        },{
+            "id": 3,
+            "text": "Morbi leo risus"
+        },{
+            "id": 4,
+            "text": "Porta ac consectetur ac"
+        },{
+            "id": 5,
+            "text": "Vestibulum at eros"
+        }];
+        React.render(
+            <MyAppComponent helloMsg="ReactJS" listItems={myList}/>,
+            document.body
+        );
+
+    </script>
+</html>
+
