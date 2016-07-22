@@ -1,0 +1,120 @@
+<html>
+    <body>
+        <center> <h3>Provinces & Cities Count in Partition Graph </h3> </center>
+        <script src="https://d3js.org/d3.v3.min.js"></script>
+        <script>
+          var width = parseInt(window.innerWidth * 0.9),
+          height = parseInt(window.innerHeight * 0.9),
+          radius = Math.min(width, height) / 2,
+          color = d3.scale.category20c();
+          /*
+          color = function(){
+            return "hsl(" + (~~(Math.random()*360%360)) + ", 180%, 50%)";
+          };
+          */
+
+          var svg = d3.select("body").append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .append("g")
+          .attr("transform", "translate(" + width / 2 + "," + height * .5 + ")");
+
+          var partition = d3.layout.partition()
+          .sort(null)
+          .size([2 * Math.PI, radius * radius])
+          .value(function(d) { return 1; });
+
+          var arc = d3.svg.arc()
+          .startAngle(function(d) { return d.x; })
+          .endAngle(function(d) { return d.x + d.dx; })
+          .innerRadius(function(d) { return Math.sqrt(d.y); })
+          .outerRadius(function(d) { return Math.sqrt(d.y + d.dy); });
+
+          d3.csv("AddressesCN.csv", function(data) {
+            console.log(data);
+            var dataset = {
+              "name": "Address",
+              "children": []
+            };
+            var province = {};
+            var city = {};
+
+            for (var i=0; i<data.length; i++) {
+              var p = [data[i].province] || [data[i].city];
+              if(province[p]){
+                province[p].count++;
+                if(province[p].cities.indexOf(data[i].city) < 0){
+                  province[p].cities.push(data[i].city);
+                }
+              } else {
+                province[p] = {
+                  count: 1
+                };
+                province[p].cities = [data[i].city];
+              }
+            }
+            console.log(province);
+            for (var i=0; i<data.length; i++) {
+              if(city[data[i].city]){
+                city[data[i].city]++;
+              } else {
+                city[data[i].city] = 1;
+              }
+            }
+            console.log(city);
+            for (var key in province) {
+              dataset.children.push({
+                "name": key,
+                "size": province[key].count,
+                "children": province[key].cities.map(function(name){
+                  return {
+                    "name": name,
+                    "size": city[name]
+                  }
+                })
+              })
+            }
+            console.log(dataset);
+            var path = svg.datum(dataset).selectAll("path")
+            .data(partition.nodes)
+            .enter().append("path")
+            .attr("display", function(d) { return d.depth ? null : "none"; }) // hide inner ring
+            .attr("d", arc)
+            .style("stroke", "#fff")
+            .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
+            .style("fill-rule", "evenodd")
+            .each(stash);
+
+            var value = function(d) { return d.size; };
+
+            path
+            .data(partition.value(value).nodes)
+            .transition()
+            .duration(1500)
+            .attrTween("d", arcTween);
+
+            path.append("svg:title")
+            .text(function(d) { return d.name + ":" + d.size; });
+          });
+
+          // Stash the old values for transition.
+          function stash(d) {
+            d.x0 = d.x;
+            d.dx0 = d.dx;
+          }
+
+          // Interpolate the arcs in data space.
+          function arcTween(a) {
+            var i = d3.interpolate({x: a.x0, dx: a.dx0}, a);
+            return function(t) {
+              var b = i(t);
+              a.x0 = b.x;
+              a.dx0 = b.dx;
+              return arc(b);
+            };
+          }
+
+          d3.select(self.frameElement).style("height", height + "px");
+        </script>
+    </body>
+</html>
